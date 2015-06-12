@@ -33,7 +33,7 @@ var messageExchange = io.sockets.on('connection', function(socket){
 			callback(true);
 			socket.nickname = data;
 			users[socket.nickname] = socket;
-			joinUser(socket.nickname);
+			joinUser(data);
 		}
 	});
 	
@@ -44,9 +44,27 @@ var messageExchange = io.sockets.on('connection', function(socket){
 		console.log('end message after trimming message is: ' + msg);
 		io.sockets.emit('new message', {msg: msg, nick: socket.nickname});
 		// io.sockets.emit('admin new message', {msg:msg, nick: 'admin'});
-		io.sockets.emit('usernames', Object.keys(users));
+		//io.sockets.emit('usernames', Object.keys(users));
 		// io.socket.broadcast.emit('admin', {msg: msg, nick: socket.nickname});
 		io.sockets.emit('admin', {msg: msg, nick: socket.nickname});
+
+		
+	});	
+
+
+	//
+
+	socket.on('new message', function(data, callback){
+		// io.sockets.emit('new message', {msg: data, nick: socket.nickname});
+		console.log(data);
+		var msg = data.trim();
+		console.log('end message after trimming message is: ' + msg);
+		io.sockets.emit('new message', {msg: msg, nick: socket.nickname});
+		// io.sockets.emit('admin new message', {msg:msg, nick: 'admin'});
+		//io.sockets.emit('usernames', Object.keys(users));
+		// io.socket.broadcast.emit('admin', {msg: msg, nick: socket.nickname});
+		// io.sockets.emit('admin', {msg: msg, nick: socket.nickname});
+		io.sockets.emit('admin receive msg', {msg: msg, nick: socket.nickname});
 
 		
 	});	
@@ -68,40 +86,44 @@ var messageExchange = io.sockets.on('connection', function(socket){
 		io.sockets.emit('new message', {msg: msg, nick: nickName, admin : true});
 	})
 
-	// user delete
-	socket.on('user delete', function(data){
-				
-		var nickName = data;
-		
-		console.log('nickName :: '+nickName);
-		
-		if(!nickName) return;
-		delete users[nickName];
-		console.log( Object.keys(users));
-		
-	})
 
-	// 브라우저를 refresh , close 할 때 , client에서 disconnect() 호출할 때
-	socket.on('disconnect', function(data){
+
+	socket.on('user out', function(data){
+		console.log('user out fire');
 		console.log(data);
-		console.log("diconnect fire!!");		
-		
+		io.sockets.emit('disconnect user', data);
+			
+	}); 
+
+	socket.on('window beforeunload', function(data){
+		console.log('window beforeunload fire');
+		console.log(data);
+		io.sockets.emit('disconnect user', data);
+			
+			
+	}); 
+
+	// 브라우저를 refresh , close 할 때
+	socket.on('disconnect', function(data, callback){
+		console.log("diconnect fire!!");
+		console.log(data);		
+		callback;
+		/*if(!socket.nickname) return;
+		delete users[socket.nickname];
+		// joinUser(socket.nickname);*/
 	});
 
-	// admin user reset	, chatAdmin start chat btn pressss!
-	socket.on('start manage', function(data){
-		console.log("start manage , data = " + data);
-		users = {};
-		
-	});
 	function joinUser(user){
 		console.log( Object.keys(users));
 		// io.sockets.emit('usernames', Object.keys(users));
-		console.log(user);
 		io.sockets.emit('usernames', user);
 		// io.sockets.broadcast.emit('admin', Object.keys(users));
 		io.sockets.emit('admin', user);
 		// io.sockets.emit('usernames', nicknames);
+	}
+
+	function exituser(data){
+
 	}
 
 });
